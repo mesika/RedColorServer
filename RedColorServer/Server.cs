@@ -49,7 +49,7 @@ namespace RedColorServer
         {
             _pushBroker = new PushBroker();
             //var appleCert = File.ReadAllBytes(@"Certificates\RedColorPushDev.p12");
-            
+
             _pushBroker.OnDeviceSubscriptionChanged += pushBroker_OnDeviceSubscriptionChanged;
             _pushBroker.OnNotificationFailed += _pushBroker_OnNotificationFailed;
 
@@ -59,7 +59,7 @@ namespace RedColorServer
 
         static void _pushBroker_OnNotificationFailed(object sender, PushSharp.Core.INotification notification, Exception error)
         {
-            
+
         }
 
 
@@ -77,19 +77,30 @@ namespace RedColorServer
             "{\"id\" : \"1405098247742\",\"title\" : \"פיקוד העורף התרעה במרחב \",\"data\" : [\"ניו יורק 246\",\"G 250\"]}";
         private static void RunLoop(object state)
         {
-            var webClient = new CustomTimeOutWebClient();
-            
+            //var webClient = new CustomTimeOutWebClient();
+            var webClient = new WebClient();
+            long id = 0; // string.Empty;
+
             while (true)
             {
+                Thread.Sleep(TimeSpan.FromSeconds(2));
                 var counter = 0;
                 try
                 {
-                    var data = webClient.DownloadString(@"http://www.oref.org.il/WarningMessages/alerts.json");
+                    //var data = webClient.DownloadString(@"http://www.oref.org.il/WarningMessages/alerts.json");
+                    var data = webClient.DownloadString(@"http://www.mako.co.il/Collab/amudanan/adom.txt");
                     if (string.IsNullOrEmpty(data) == false)
                     {
                         var json = JsonConvert.DeserializeObject<Warning>(data);
                         //var json = JsonConvert.DeserializeObject<Warning>(TestData);
-                        
+
+                        long jsonId;
+                        if (long.TryParse(json.id, out jsonId) == false)
+                            continue;
+
+                        if (jsonId <= id) continue;
+                        id = jsonId;
+
                         if (json.data.Length > 0)
                         {
                             var iosDevices = new Dictionary<string, List<string>>();
@@ -175,7 +186,7 @@ namespace RedColorServer
                                     Interlocked.Increment(ref counter);
                                     var sb = new StringBuilder();
                                     foreach (var area in iosDevices[iosDeviceId])
-                                    { 
+                                    {
                                         sb.AppendFormat("{0}, ", area);
                                     }
 
@@ -189,7 +200,7 @@ namespace RedColorServer
                                 }
                                 catch (Exception ex)
                                 {
-                                    Console.WriteLine(ex);
+                                    Console.WriteLine("{0}\t{1}", DateTime.Now.ToLongTimeString(), ex);
                                 }
                             }
 
@@ -212,10 +223,17 @@ namespace RedColorServer
 
                     //_pushBroker.StopAllServices(true);
 
-                    Thread.Sleep(TimeSpan.FromSeconds(2));
+                    //Thread.Sleep(TimeSpan.FromSeconds(2));
                 }
-                catch (Exception)
+                catch (WebException ex)
                 {
+                    Console.WriteLine("{0}\tWeb Exception. Renewing webClient\t{1}", DateTime.Now.ToLongTimeString(), ex);
+                    //webClient = new CustomTimeOutWebClient();
+                    webClient = new WebClient();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("{0}\t{1}", DateTime.Now.ToLongTimeString(), ex);
                     Thread.Sleep(TimeSpan.FromSeconds(2));
                 }
 
