@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.ServiceModel;
 using System.ServiceModel.Web;
+using System.Linq;
 
 namespace RedColorServer
 {
@@ -26,6 +27,10 @@ namespace RedColorServer
         }
         public void RegisterDevice(string deviceType, string deviceId, IEnumerable<int> areas)
         {
+            if (areas.Any() == false)
+            {
+                areas = new int[] { -1 };
+            }
             deviceId = deviceId.Replace(" ", string.Empty).Replace("<", string.Empty).Replace(">", string.Empty);
             _storage.RegisterDevice(deviceType, deviceId, areas);
         }

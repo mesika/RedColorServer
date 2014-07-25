@@ -13,10 +13,13 @@ using PushSharp.Apple;
 
 namespace RedColorServer
 {
+    
     public class Server
     {
+        private static readonly log4net.ILog _logger = log4net.LogManager.GetLogger(typeof(Server));
         private static PushBroker _pushBroker;
         private static IStorage _storage;
+        private const int LOOP_SECONDS = 1;
 
         public class Warning
         {
@@ -26,16 +29,21 @@ namespace RedColorServer
         }
         public static void StartServer()
         {
+            _logger.Info("Starting Server...");
             ConfigurePushEngine();
             ConfigureServiceHost();
             ConfigureStorage();
 
             ThreadPool.QueueUserWorkItem(RunLoop);
+
+            _logger.Info("Server Started.");
         }
 
         private static void ConfigureStorage()
         {
+            _logger.Debug("Configuring Mongo source.");
             _storage = MongoDBStorage.Instance;
+            _logger.Debug("Mongo source configured.");
         }
 
         private static void ConfigureServiceHost()
@@ -47,46 +55,57 @@ namespace RedColorServer
 
         private static void ConfigurePushEngine()
         {
+            _logger.Debug("Configuring push engine.");
             _pushBroker = new PushBroker();
             //var appleCert = File.ReadAllBytes(@"Certificates\RedColorPushDev.p12");
 
             _pushBroker.OnDeviceSubscriptionChanged += pushBroker_OnDeviceSubscriptionChanged;
             _pushBroker.OnNotificationFailed += _pushBroker_OnNotificationFailed;
+            _pushBroker.OnServiceException += _pushBroker_OnServiceException;
 
             var appleCert = File.ReadAllBytes(@"Certificates\RedColorAPNProduction.p12");
             _pushBroker.RegisterAppleService(new ApplePushChannelSettings(true, appleCert, "8340706"));
+            _logger.Debug("Push engine configured.");
+        }
+
+        static void _pushBroker_OnServiceException(object sender, Exception error)
+        {
+            _logger.Error("Push - Service Exception.", error);
+            Console.WriteLine("Service Exception {0}", error);
         }
 
         static void _pushBroker_OnNotificationFailed(object sender, PushSharp.Core.INotification notification, Exception error)
         {
-
+            _logger.Error("Push - Notification Failed", error);
+            Console.WriteLine("Notification Failed {0}", error);
         }
 
 
         static void pushBroker_OnDeviceSubscriptionChanged(object sender, string oldSubscriptionId, string newSubscriptionId, PushSharp.Core.INotification notification)
         {
-
+            
         }
 
         private static readonly HashSet<int> _lastValues = new HashSet<int>();
         private static readonly HashSet<int> _lastValues2 = new HashSet<int>();
 
-        //private const string TestData ="{\"id\" : \"1405095741763\",\"title\" : \"פיקוד העורף התרעה במרחב \",\"data\" : [\"באר שבע 210\",\"באר שבע 211\",\"באר שבע 212\",\"באר שבע 213\",]}";
-
-        private const string TestData =
-            "{\"id\" : \"1405098247742\",\"title\" : \"פיקוד העורף התרעה במרחב \",\"data\" : [\"ניו יורק 246\",\"G 250\"]}";
+        private const string TestData = "{\"id\" : \"1405098247742\",\"title\" : \"פיקוד העורף התרעה במרחב \",\"data\" : [\"ניו יורק 246\",\"לוס אנג'לס 250\"]}";
         private static void RunLoop(object state)
         {
             //var webClient = new CustomTimeOutWebClient();
             var webClient = new WebClient();
-            long id = 0; // string.Empty;
+            long id = 0;
 
+            StreamWriter logCsvWriterStream = File.AppendText(@"c:\log.csv");
+            logCsvWriterStream.AutoFlush = true;
+            
             while (true)
             {
-                Thread.Sleep(TimeSpan.FromSeconds(2));
+                Thread.Sleep(TimeSpan.FromSeconds(LOOP_SECONDS));
                 var counter = 0;
                 try
                 {
+                    
                     //var data = webClient.DownloadString(@"http://www.oref.org.il/WarningMessages/alerts.json");
                     var data = webClient.DownloadString(@"http://www.mako.co.il/Collab/amudanan/adom.txt");
                     if (string.IsNullOrEmpty(data) == false)
@@ -115,7 +134,12 @@ namespace RedColorServer
                                         continue;
                                 }
 
-                                _lastValues.Add(areaCode);
+                                logCsvWriterStream.WriteLine(string.Format("{0},{1},{2}", DateTime.Now.ToString("o"), areaCode, area));
+
+                                _logger.DebugFormat("ALERT: {0},{1}", areaCode, area);
+                                    
+
+                                _lastValues.Add(arseaCode);
 
                                 if (_lastValues2.Contains(areaCode))
                                 {
@@ -134,19 +158,6 @@ namespace RedColorServer
                                         if (iosDevices.ContainsKey(device.DeviceId) == false)
                                             iosDevices[device.DeviceId] = new List<string>();
                                         iosDevices[device.DeviceId].Add(area);
-
-                                        //try
-                                        //{
-                                        //    _pushBroker.QueueNotification(new AppleNotification()
-                                        //                                        .ForDeviceToken(device.DeviceId)
-                                        //                                        .WithAlert(area)
-                                        //                                        .WithSound("default")
-                                        //                                        );
-                                        //}
-                                        //catch (Exception ex)
-                                        //{
-                                        //    Console.WriteLine(ex);
-                                        //}
                                     }
                                 }
 
@@ -159,24 +170,8 @@ namespace RedColorServer
                                         if (iosDevices.ContainsKey(device.DeviceId) == false)
                                             iosDevices[device.DeviceId] = new List<string>();
                                         iosDevices[device.DeviceId].Add(area);
-
-                                        //try
-                                        //{
-                                        //    _pushBroker.QueueNotification(new AppleNotification()
-                                        //                                        .ForDeviceToken(device.DeviceId)
-                                        //                                        .WithAlert(area)
-                                        //                                        .WithSound("default")
-                                        //                                        );
-                                        //}
-                                        //catch (Exception ex)
-                                        //{
-                                        //    Console.WriteLine(ex);
-                                        //}
                                     }
                                 }
-
-                                //Console.WriteLine("{0}: \t{1}", DateTime.Now.ToLongTimeString(), area);
-                                //Console.WriteLine("AreaCode: {0}", areaCode);
                             }
 
                             foreach (var iosDeviceId in iosDevices.Keys)
@@ -190,6 +185,8 @@ namespace RedColorServer
                                         sb.AppendFormat("{0}, ", area);
                                     }
 
+                                    sb.Remove(sb.Length - 2, 1);
+
                                     _pushBroker.QueueNotification(new AppleNotification()
                                                                         .ForDeviceToken(iosDeviceId)
                                                                         .WithAlert(sb.ToString())
@@ -200,6 +197,7 @@ namespace RedColorServer
                                 }
                                 catch (Exception ex)
                                 {
+                                    _logger.Error("Error Occured.", ex);
                                     Console.WriteLine("{0}\t{1}", DateTime.Now.ToLongTimeString(), ex);
                                 }
                             }
@@ -223,18 +221,20 @@ namespace RedColorServer
 
                     //_pushBroker.StopAllServices(true);
 
-                    //Thread.Sleep(TimeSpan.FromSeconds(2));
+                    //Thread.Sleep(TimeSpan.FromSeconds(LOOP_SECONDS));
                 }
                 catch (WebException ex)
                 {
+                    _logger.Error("Error Occured.", ex);
                     Console.WriteLine("{0}\tWeb Exception. Renewing webClient\t{1}", DateTime.Now.ToLongTimeString(), ex);
                     //webClient = new CustomTimeOutWebClient();
                     webClient = new WebClient();
                 }
                 catch (Exception ex)
                 {
+                    _logger.Error("Error Occured.", ex);
                     Console.WriteLine("{0}\t{1}", DateTime.Now.ToLongTimeString(), ex);
-                    Thread.Sleep(TimeSpan.FromSeconds(2));
+                    Thread.Sleep(TimeSpan.FromSeconds(LOOP_SECONDS));
                 }
 
             }

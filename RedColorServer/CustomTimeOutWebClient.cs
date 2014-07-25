@@ -8,7 +8,7 @@ namespace RedColorServer
 {
     class CustomTimeOutWebClient : WebClient
     {
-        private const int TIME_OUT = 2000;
+        private const int TIME_OUT = 10000;
 
         protected override WebRequest GetWebRequest(Uri address)
         {
