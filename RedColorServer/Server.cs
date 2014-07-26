@@ -155,7 +155,7 @@ namespace RedColorServer
                                 {
                                     if (device.DeviceType == "ios")
                                     {
-                                        if (device.Areas.First() == -1 || (device.Areas.Contains(areaCode))
+                                        if (device.Areas.First() == -1 || (device.Areas.Contains(areaCode)))
                                         {
                                             if (iosDevices.ContainsKey(device.DeviceId) == false)
                                                 iosDevices[device.DeviceId] = new List<string>();

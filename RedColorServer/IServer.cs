@@ -10,7 +10,7 @@ namespace RedColorServer
     {
         [OperationContract]
         [WebInvoke(UriTemplate = "register", BodyStyle = WebMessageBodyStyle.Wrapped)]
-        void RegisterDevice(string deviceType, string deviceId, List<int> areas);
+        void RegisterDevice(string deviceType, string deviceId, HashSet<int> areas);
 
         [WebGet(UriTemplate = "testdata")]
         void TestData();
@@ -26,14 +26,14 @@ namespace RedColorServer
         {
             _storage = MongoDBStorage.Instance;
         }
-        public void RegisterDevice(string deviceType, string deviceId, List<int> areas)
+        public void RegisterDevice(string deviceType, string deviceId, HashSet<int> areas)
         {
             var areasString = string.Join(",", areas.Select(p => p.ToString()).ToArray());
 
             _logger.InfoFormat("User registered device type:{0} id:{1}: with areas:{2}", deviceType, deviceId, areasString);
             if (areas.Any() == false)
             {
-                areas = new List<int> { -1 };
+                areas = new HashSet<int> { -1 };
             }
             deviceId = deviceId.Replace(" ", string.Empty).Replace("<", string.Empty).Replace(">", string.Empty);
             _storage.RegisterDevice(deviceType, deviceId, areas);

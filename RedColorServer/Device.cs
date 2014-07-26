@@ -9,6 +9,6 @@ namespace RedColorServer
         public string Name { get; set; }
         public string DeviceType { get; set; }
         public string DeviceId { get; set; }
-        public List<int> Areas { get; set; }
+        public HashSet<int> Areas { get; set; }
     }
 }

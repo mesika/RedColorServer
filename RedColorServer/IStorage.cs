@@ -5,7 +5,7 @@ namespace RedColorServer
 {
     public interface IStorage
     {
-        void RegisterDevice(string deviceType, string deviceId, List<int> areas);
+        void RegisterDevice(string deviceType, string deviceId, HashSet<int> areas);
 
         IEnumerable<Device> FindDevicesForArea(int area);
         IEnumerable<Device> FindDevicesRegisteredForAll();
