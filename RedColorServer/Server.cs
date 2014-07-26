@@ -13,7 +13,7 @@ using PushSharp.Apple;
 
 namespace RedColorServer
 {
-    
+
     public class Server
     {
         private static readonly log4net.ILog _logger = log4net.LogManager.GetLogger(typeof(Server));
@@ -83,7 +83,7 @@ namespace RedColorServer
 
         static void pushBroker_OnDeviceSubscriptionChanged(object sender, string oldSubscriptionId, string newSubscriptionId, PushSharp.Core.INotification notification)
         {
-            
+
         }
 
         private static readonly HashSet<int> _lastValues = new HashSet<int>();
@@ -98,14 +98,14 @@ namespace RedColorServer
 
             StreamWriter logCsvWriterStream = File.AppendText(@"c:\log.csv");
             logCsvWriterStream.AutoFlush = true;
-            
+
             while (true)
             {
                 Thread.Sleep(TimeSpan.FromSeconds(LOOP_SECONDS));
                 var counter = 0;
                 try
                 {
-                    
+
                     //var data = webClient.DownloadString(@"http://www.oref.org.il/WarningMessages/alerts.json");
                     var data = webClient.DownloadString(@"http://www.mako.co.il/Collab/amudanan/adom.txt");
                     if (string.IsNullOrEmpty(data) == false)
@@ -137,9 +137,9 @@ namespace RedColorServer
                                 logCsvWriterStream.WriteLine(string.Format("{0},{1},{2}", DateTime.Now.ToString("o"), areaCode, area));
 
                                 _logger.DebugFormat("ALERT: {0},{1}", areaCode, area);
-                                    
 
-                                _lastValues.Add(arseaCode);
+
+                                _lastValues.Add(areaCode);
 
                                 if (_lastValues2.Contains(areaCode))
                                 {
@@ -155,9 +155,12 @@ namespace RedColorServer
                                 {
                                     if (device.DeviceType == "ios")
                                     {
-                                        if (iosDevices.ContainsKey(device.DeviceId) == false)
-                                            iosDevices[device.DeviceId] = new List<string>();
-                                        iosDevices[device.DeviceId].Add(area);
+                                        if (device.Areas.First() == -1 || (device.Areas.Contains(areaCode))
+                                        {
+                                            if (iosDevices.ContainsKey(device.DeviceId) == false)
+                                                iosDevices[device.DeviceId] = new List<string>();
+                                            iosDevices[device.DeviceId].Add(area);
+                                        }
                                     }
                                 }
 

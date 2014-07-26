@@ -11,7 +11,6 @@ namespace RedColorServerConsole
     {
         static void Main(string[] args)
         {
-            //log4net.GlobalContext.Properties["ProgramDataPath"] = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
             log4net.Config.XmlConfigurator.Configure();
 
             Server.StartServer();

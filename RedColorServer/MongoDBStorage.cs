@@ -29,7 +29,7 @@ namespace RedColorServer
                 return _instance;
             }
         }
-        public void RegisterDevice(string deviceType, string deviceId, IEnumerable<int> areas)
+        public void RegisterDevice(string deviceType, string deviceId, List<int> areas)
         {
             var collection = _dataBase.GetCollection<Device>("devices");
             var query = Query<Device>.EQ(x => x.DeviceId, deviceId);
