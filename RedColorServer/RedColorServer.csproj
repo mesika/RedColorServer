@@ -69,16 +69,22 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AlertMessage.cs" />
+    <Compile Include="AlertSources\BaseOrefSource.cs" />
+    <Compile Include="AlertSources\IAlertSource.cs" />
+    <Compile Include="AlertSources\MakoSource.cs" />
+    <Compile Include="AlertSources\OrefSource.cs" />
+    <Compile Include="AlertSources\YnetSource.cs" />
     <Compile Include="CustomTimeOutWebClient.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Device.cs" />
-    <Compile Include="IAlertProvider.cs" />
     <Compile Include="IServer.cs" />
     <Compile Include="IStorage.cs" />
     <Compile Include="MongoDBStorage.cs" />
     <Compile Include="Server.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="OrefWarningMessage.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
