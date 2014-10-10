@@ -116,13 +116,13 @@ namespace RedColorServer
             }
         }
 
-        private static int _rotator = 0;
+        private static long _rotator = 0;
         private static readonly OrefSource _orefSource = new OrefSource();
         private static readonly MakoSource _makoSource = new MakoSource();
         private static readonly YnetSource _ynetSource = new YnetSource();
         private static IAlertSource GetAlertFromRotatingSource()
         {
-            int rot = _rotator % 3;
+            long rot = _rotator % 2;
             //rot = 2;
             Interlocked.Increment(ref _rotator);
             switch (rot)
